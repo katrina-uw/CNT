@@ -1,4 +1,3 @@
-import os
 import logging
 import numpy as np
 import pandas as pd
@@ -129,7 +128,6 @@ class Dataset:
 
 def get_dataset(dataset, normalize, seed, entity=None, normalize_type="minmax"):
     from data_utils.hai_entity import Hai_entity
-    from data_utils.smd_entity import Smd_entity
     from data_utils.swat import Swat
     from data_utils.smap import SMAP
     from data_utils.msl import MSL
@@ -139,8 +137,6 @@ def get_dataset(dataset, normalize, seed, entity=None, normalize_type="minmax"):
         ds = Hai_entity(seed=seed, entity=entity, normalize=True, reload=False, normalize_type=normalize_type)
     elif dataset == "swat":
         ds = Swat(seed=seed, shorten_long=False, normalize=normalize, reload=False, normalize_type=normalize_type)
-    elif dataset == "smd":
-        ds = Smd_entity(seed=seed, entity=entity, normalize=normalize, normalize_type=normalize_type)
     elif dataset == "smap":
         ds = SMAP(seed=seed, normalize=normalize, normalize_type=normalize_type)
     elif dataset == "msl":
