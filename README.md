@@ -1,5 +1,3 @@
-# CNT
-
 ## Overview
 This repository contains the implementation of the CNT framework for the paper "Harnessing Contrastive Learning and Neural Transformation for Time Series Anomaly Detection".
 
@@ -19,9 +17,9 @@ The datasets used in our experiments can be downloaded from the following link:
 Please place the datasets in the data/ directory.
 
 ### Running the code
-To train and evaluate the CNT model on a specific dataset:
+To train and evaluate the CNT model on a specific dataset, e.g., SMAP:
 ```
-python train.py --datasets=msl,smap,swat,wadi --train
+python train.py --datasets=smap --train
 ```
 
 
