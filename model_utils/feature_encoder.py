@@ -2,66 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from model_utils.tcn import TConv, MixProp
-from model_utils.series_decompose import series_decomp
 
-
-class MLPFeatureEncoder(nn.Module):
-
-    def __init__(self, config):
-
-        super().__init__()
-        self.win_size = config.win_size
-        self.seq_encoder = MLPEncoder(config.seq_len - config.win_size, config.hidden_dim)
-
-    def forward(self, x):
-        context_x = x[:, :-self.win_size, :]
-        suspect_x = x[:, self.win_size:, :]
-
-        context_state = self.seq_encoder(context_x)
-        suspect_state = self.seq_encoder(suspect_x)
-        return context_state, suspect_state
-
-
-class MLPEncoder(nn.Module):
-
-    def __init__(self, seq_len, hidden_dim):
-        super(MLPEncoder, self).__init__()
-        self.seq_len = seq_len
-        self.hidden_dim = hidden_dim
-        self.individual = False
-
-        kernel_size = 25
-        self.decompsition = series_decomp(kernel_size)
-
-        if self.individual:
-            self.Linear_Seasonal = nn.ModuleList()
-            self.Linear_Trend = nn.ModuleList()
-
-            for i in range(self.channels):
-                self.Linear_Seasonal.append(nn.Linear(self.seq_len, self.hidden_dim))
-                self.Linear_Trend.append(nn.Linear(self.seq_len, self.hidden_dim))
-        else:
-            self.Linear_Seasonal = torch.nn.Sequential(nn.Linear(self.seq_len, self.hidden_dim), nn.GELU(), nn.Linear(self.hidden_dim, self.hidden_dim))
-            self.Linear_Trend = torch.nn.Sequential(nn.Linear(self.seq_len, self.hidden_dim), nn.GELU(), nn.Linear(self.hidden_dim, self.hidden_dim))
-
-    def forward(self, x):
-
-        seasonal_init, trend_init = self.decompsition(x)
-        seasonal_init, trend_init = seasonal_init.permute(0, 2, 1), trend_init.permute(0, 2, 1)
-        if self.individual:
-            seasonal_output = torch.zeros([seasonal_init.size(0) ,seasonal_init.size(1), self.pred_len]
-                                          ,dtype=seasonal_init.dtype).to(seasonal_init.device)
-            trend_output = torch.zeros([trend_init.size(0) ,trend_init.size(1), self.pred_len]
-                                       ,dtype=trend_init.dtype).to(trend_init.device)
-            for i in range(self.channels):
-                seasonal_output[: ,i ,:] = self.Linear_Seasonal[i](seasonal_init[: ,i ,:])
-                trend_output[: ,i ,:] = self.Linear_Trend[i](trend_init[: ,i ,:])
-        else:
-            seasonal_output = self.Linear_Seasonal(seasonal_init)
-            trend_output = self.Linear_Trend(trend_init)
-
-        x = seasonal_output + trend_output
-        return x
 
 class TCNFeatureEncoder_separate(nn.Module):
 
@@ -93,14 +34,6 @@ class TCNFeatureEncoder(nn.Module):
         self.win_size = config.win_size
         self.seq_encoder = SpatialTemporalEncoder_1D(config.feature_dim if config.target_dims is None else 1, config.seq_len-config.win_size, config.n_layers, config.hidden_dim,\
                                                   is_graph_conv=config.is_graph_conv, is_skip=config.is_skip, is_residual=config.is_residual, dilation_exp=2, dropout=config.dropout)
-        # self.seq_encoder = SpatialTemporalEncoder(config.feature_dim if config.target_dims is None else 1, config.seq_len-config.win_size, config.n_layers, config.hidden_dim,\
-        #                                           is_graph_conv=config.is_graph_conv, is_skip=config.is_skip, is_residual=config.is_residual, dilation_exp=2, dropout=config.dropout)
-        #
-        #self.graph_constructor = dynamic_graph_constructor(config.feature_dim, config.topK, config.hidden_dim, alpha=3)
-
-        # self.graph_encoder = nn.Sequential(
-        #     nn.Linear(1, config.hidden_dim), nn.LeakyReLU(), nn.GRU(config.hidden_dim, config.hidden_dim, batch_first=True)
-        # )
 
     def forward(self, x):
         context_x = x[:, :-self.win_size, :]
@@ -319,11 +252,3 @@ class SpatialTemporalEncoder_1D(nn.Module):
 
         return skip.squeeze(-1).unsqueeze(1)
 
-
-# if __name__ == '__main__':
-#     # generate a tensor with shape (batch_size=128, seq_len=100, feature_dim=51)
-#     x = torch.randn(128, 100, 51)
-#     # generate an adjacency matrix
-#     adj = torch.randn(128, 51, 51)
-#     feature_encoder = FeatureEncoder(51, 100, win_size=5, hidden_dim=64, n_layers=3, topK=15)
-#     output = feature_encoder(x)

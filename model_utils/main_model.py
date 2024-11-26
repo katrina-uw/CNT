@@ -170,11 +170,7 @@ class MainModel(nn.Module):
 
     def get_loss(self, context_graph_state, suspect_graph_state, suspect_graph_states, reduction=True):
 
-        if "contextual" in self.loss_type and "NTL" in self.loss_type and "OCC" in self.loss_type and "Graph" in self.loss_type:
-            return self.get_contextual_OCC_NTL_Graph_loss(context_graph_state, suspect_graph_states, reduction=reduction)
-        elif "contextual" in self.loss_type and "NTL" in self.loss_type and "OCC" not in self.loss_type and "Graph" in self.loss_type:
-            return self.get_contextual_NTL_Graph_loss(context_graph_state, suspect_graph_states, reduction=reduction)
-        elif "contextual" in self.loss_type and "NTL" in self.loss_type and "OCC" in self.loss_type:
+        if "contextual" in self.loss_type and "NTL" in self.loss_type and "OCC" in self.loss_type:
             return self.get_contextual_OCC_NTL_loss(context_graph_state, suspect_graph_states, reduction=reduction)
         elif "contextual" in self.loss_type and "OCC" in self.loss_type and "NTL" not in self.loss_type:
             return self.get_contextual_OCC_loss(context_graph_state, suspect_graph_state, reduction=reduction)

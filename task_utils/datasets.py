@@ -5,22 +5,6 @@ import random
 from torch.utils.data import DistributedSampler
 
 
-class TsForecastingDataset(Dataset):
-
-    def __init__(self, data, seq_len, stride, starts=np.array([]), horizon=1):
-        self.sequences = get_sub_seqs(data, seq_len=seq_len, stride=stride, start_discont=starts, return_seqs=True)
-        self.horizon = horizon
-
-    def __len__(self):
-        return len(self.sequences)
-
-    def __getitem__(self, idx):
-        feature = self.sequences[idx][:-self.horizon, :]
-        y = self.sequences[idx][-self.horizon:, :]
-
-        return feature, y
-
-
 class TsReconstructionDataset(Dataset):
 
     def __init__(self, data, seq_len, stride, starts=np.array([])):
@@ -33,61 +17,6 @@ class TsReconstructionDataset(Dataset):
     def __getitem__(self, idx):
         feature = self.sequences[idx]
         return feature
-
-
-class TsForecastingDataset_former(Dataset):
-
-    def __init__(self, data, data_stamp, seq_len, label_len, pred_len, seq_starts):
-
-        self.data_x = data
-        self.data_y = data
-        self.data_stamp = data_stamp
-
-        self.seq_len = seq_len
-        self.label_len = label_len
-        self.pred_len = pred_len
-        self.seq_starts = seq_starts
-
-    def __len__(self):
-        return len(self.seq_starts)
-
-    def __getitem__(self, idx_):
-        s_begin = self.seq_starts[idx_]
-        s_end = s_begin + self.seq_len
-        r_begin = s_end - self.label_len
-        r_end = r_begin + self.label_len + self.pred_len
-
-        seq_x = self.data_x[s_begin:s_end]
-        seq_y = self.data_y[r_begin:r_end]
-        seq_x_mark = self.data_stamp[s_begin:s_end]
-        seq_y_mark = self.data_stamp[r_begin:r_end]
-
-        return seq_x, seq_y, seq_x_mark, seq_y_mark
-
-
-class TsReconstructionDataset_former(Dataset):
-
-    def __init__(self, data, data_stamp, seq_len, seq_starts, is_train=True):
-
-        self.data_x = data
-        self.data_y = data
-        self.is_train = is_train
-        self.data_stamp = data_stamp
-
-        self.seq_len = seq_len
-        self.seq_starts = seq_starts
-
-    def __len__(self):
-        return len(self.seq_starts)
-
-    def __getitem__(self, idx_):
-        s_begin = self.seq_starts[idx_]
-        s_end = s_begin + self.seq_len
-
-        seq_x = self.data_x[s_begin:s_end]
-        seq_x_mark = self.data_stamp[s_begin:s_end]
-
-        return seq_x, seq_x_mark
 
 
 def get_train_data_loaders(x_seqs: np.ndarray, batch_size: int, train_val_percentage: float, seed: int, shuffle: bool = True,

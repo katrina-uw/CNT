@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import DataLoader
 from model_utils.main_model import MainModel
 from tqdm import tqdm
-from collections import defaultdict
+
 import time
 import random
 from task_utils.tools import dict2Obj
